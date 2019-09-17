@@ -15,44 +15,33 @@ struct subset{
     int subset[100];
 };
 
-bool isSubsetSum(int set[], int n, int sum)
+
+bool getSubsetSum(int set[], int n, int sum)
 {
-    // Base Cases
+
     if (sum == 0){
         return true;
     }
     if (n == 0 && sum != 0) {
         return false;
     }
-    // If last element is greater than sum, then ignore it
+
     if (set[n-1] > sum) {
-        return isSubsetSum(set, n - 1, sum);
+        return getSubsetSum(set, n - 1, sum);
     }
-    /* else, check if sum can be obtained by any of the following
-       (a) including the last element
-       (b) excluding the last element   */
-    return isSubsetSum(set, n-1, sum) ||
-           isSubsetSum(set, n-1, sum-set[n-1]);
+
+    if(getSubsetSum(set, n-1, sum) == true){
+        return true;
+    }
+    else if(getSubsetSum(set, n-1, sum-set[n-1])){
+        printf("%d ", set[n-1]);
+        return true;
+    }
+    else{
+        return false;
+    }
+
 }
-
-/*void getSubsetSum(int set[], int n, int sum, char equation[])
-{
-
-    if (sum == 0){
-        printf("%s\n", equation);
-        return true;
-    }
-    if (n == 0 && sum != 0) {
-        return false;
-    }
-
-    if (set[n-1] > sum) {
-        return isSubsetSum(set, n - 1, sum);
-    }
-
-    return isSubsetSum(set, n-1, sum) ||
-           isSubsetSum(set, n-1, sum-set[n-1]);
-} */
 
 
 void timer(int timeInSec){
@@ -170,8 +159,10 @@ int main(int argc, char *argv[]){
     }
     int inSize = strlen(inputFile);
     int outSize = strlen(outputFile);
-
-
+    int testing[4] = {4, 3, 2, 1};
+    getSubsetSum(testing, sizeof(testing)/sizeof(testing[0]), 9);
+    printf("\n");
+    exit(0);
 
     if(inputFile[inSize-1] == 't'){
         if(inputFile[inSize-2] == 'a'){
@@ -228,7 +219,7 @@ int main(int argc, char *argv[]){
                     printf("%s", buffer);
                     printf("PID of Child is %d\n", getpid());
                     struct subset tempSub = seperateString(buffer);
-                    if (isSubsetSum(tempSub.subset, tempSub.size, tempSub.sum) == true) {
+                    if (getSubsetSum(tempSub.subset, tempSub.size, tempSub.sum) == true) {
                         printf("Yes\n");
                     } else {
                         printf("nope\n");
@@ -238,7 +229,7 @@ int main(int argc, char *argv[]){
 
                 else if(childPid < 0)  // fork failed
                 {
-                    // log the error
+                    perror("Error while attempting fork.\n");
                 }
 
                 else  // Main (parent) process after fork succeeds
