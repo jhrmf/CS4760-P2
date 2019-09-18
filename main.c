@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/time.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +8,34 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <signal.h>
 
 // code from https://stackoverflow.com/questions/19461744/how-to-make-parent-wait-for-all-child-processes-to-finish
+
+pid_t mainChild;
+
+static void myhandler(int s) {
+
+    int errsave;
+    errsave = errno;
+    kill(mainChild, SIGKILL);
+    errno = errsave;
+}
+static int setupinterrupt(void) { /* set up myhandler for SIGPROF */
+    struct sigaction act;
+    act.sa_handler = myhandler;
+    act.sa_flags = 0;
+    return (sigemptyset(&act.sa_mask) || sigaction(SIGPROF, &act, NULL));
+}
+static int setupitimer(int n) { /* set ITIMER_PROF for 2-second intervals */
+    struct itimerval value;
+    value.it_interval.tv_sec = n;
+    value.it_interval.tv_usec = 0;
+    value.it_value = value.it_interval;
+    return (setitimer(ITIMER_PROF, &value, NULL));
+}
+
 char finalEquation[] = "";
 struct subset{
     int size, sum;
@@ -74,6 +101,10 @@ struct subset seperateString(char str[]){
 
     sub.size = 1;
 
+    //setupinterrupt();
+    //setupitimer();
+
+
     for(i = 0; i < 100; i++){
         sub.subset[i] = 0;
     }
@@ -136,7 +167,7 @@ int main(int argc, char *argv[]){
     int opt = 0;
     char inputFile[100] = "input.dat";
     char outputFile[100] = "output.dat";
-    char buffer[100];
+    char buffer[1000];
     int timeInSec = 1;
 
     while ((opt = getopt(argc, argv,"hi:o:t:")) != -1) {   //GET OPT WOOOOO
@@ -166,13 +197,6 @@ int main(int argc, char *argv[]){
 
     int inSize = strlen(inputFile);
     int outSize = strlen(outputFile);
-    /*
-    int testing[4] = {4, 3, 2, 1};
-    char equation[] = "";
-    getSubsetSum(testing, sizeof(testing)/sizeof(testing[0]), 9, equation);
-    printf("\n");
-    exit(0);
-    */
 
     if(inputFile[inSize-1] == 't'){
         if(inputFile[inSize-2] == 'a'){
@@ -205,9 +229,8 @@ int main(int argc, char *argv[]){
     FILE *outptr = fopen(outputFile, "w");
 
 
-    while(fgets(buffer, sizeof(buffer), inptr)){
-        if(line == 0){
-            fputs(buffer, inptr);
+    while(fgets(buffer, sizeof(buffer), inptr)){    //go through the file
+        if(line == 0){      //for the first line
             n = atoi(buffer);
         }
         else{
@@ -221,9 +244,6 @@ int main(int argc, char *argv[]){
                     childPid = fork();
                 }
                 else{
-                    if ((childPid = wait(&status)) == -1){
-                        printf("Waiting...\n");
-                    }
                     childPid = fork();
                 }
                 if(x != 0){
@@ -231,8 +251,8 @@ int main(int argc, char *argv[]){
                 }
                 if(childPid == 0)  // fork succeeded
                 {
-                    line++;
 
+                    line++;
                     struct subset tempSub = seperateString(buffer);
                     if (getSubsetSum(tempSub.subset, tempSub.size, tempSub.sum, tempSub.equation) == true) {
                         tempSub.equation[strlen(tempSub.equation)-2] = '=';
@@ -244,10 +264,12 @@ int main(int argc, char *argv[]){
                         strcat(tempSub.equation, "\n");
                         strcat(storedPid, tempSub.equation);
                         fputs(storedPid, outptr);
-                    } else {
-                        printf("nope\n");
+                        exit(0);
                     }
-                    exit(0);
+                    else {
+                        printf("nope\n");
+                        exit(0);
+                    }
                 }
                 else if(childPid < 0)  // fork failed
                 {
@@ -256,35 +278,19 @@ int main(int argc, char *argv[]){
 
                 else  // Main (parent) process after fork succeeds
                 {
-                    int returnStatus = 0;
-
-                    time_t now;
-                    time(&now);
-                    struct tm *local = localtime(&now);
-                    int seconds = local->tm_sec;
-                    int temp = seconds;
-                    while(temp - seconds != 1){
-                        time(&now);
-                        local = localtime(&now);
-                        temp = local->tm_sec;
-                    }
-                    if(kill(childPid, 0) != 0){
-                        printf("Process TERMINATED after 1 seconds\n");
-                        kill(childPid, SIGKILL);
-                    }
-
+                    printf("here");
+                    waitpid(childPid, &status, 0);
                 }
 
             }
 
-            break;
 
         }
         line++;
+        exit(0);
     }
     fclose(inptr);
     fclose(outptr);
-
 
 
 }
