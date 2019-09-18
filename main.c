@@ -39,7 +39,7 @@ static int setupitimer(int n) { /* set ITIMER_PROF for 2-second intervals */
 char finalEquation[] = "";
 struct subset{
     int size, sum;
-    int subset[100];
+    int subset[200];
     char equation[1000];
 };
 
@@ -62,10 +62,11 @@ bool getSubsetSum(int set[], int n, int sum, char equation[])
         return true;
     }
     else if(getSubsetSum(set, n-1, sum-set[n-1], equation)){
-        char temp[100];
+        char temp[1000];
         sprintf(temp, "%d", set[n-1]);
         strcat(equation, temp);
         strcat(equation, " + ");
+        printf("%s\n", equation);
         strcpy(finalEquation, equation);
         return true;
     }
@@ -167,7 +168,7 @@ int main(int argc, char *argv[]){
     int opt = 0;
     char inputFile[100] = "input.dat";
     char outputFile[100] = "output.dat";
-    char buffer[1000];
+    char buffer[5000];
     int timeInSec = 1;
 
     while ((opt = getopt(argc, argv,"hi:o:t:")) != -1) {   //GET OPT WOOOOO
@@ -229,68 +230,64 @@ int main(int argc, char *argv[]){
     FILE *outptr = fopen(outputFile, "w");
 
 
-    while(fgets(buffer, sizeof(buffer), inptr)){    //go through the file
-        if(line == 0){      //for the first line
-            n = atoi(buffer);
-        }
-        else{
-            int x;
-            int status;
-            pid_t p, wpid;
-            printf("PID of Parent is %d\n", getpid());
-            for(x = 0; x < n; x++){
-                pid_t childPid;  // the child process that the execution will soon run inside of.
-                if(x == 0){
-                    childPid = fork();
-                }
-                else{
-                    childPid = fork();
-                }
-                if(x != 0){
-                    fgets(buffer, sizeof(buffer), inptr);
-                }
-                if(childPid == 0)  // fork succeeded
-                {
+    fgets(buffer, sizeof(buffer), inptr);  //go through the file
 
-                    line++;
-                    struct subset tempSub = seperateString(buffer);
-                    if (getSubsetSum(tempSub.subset, tempSub.size, tempSub.sum, tempSub.equation) == true) {
-                        tempSub.equation[strlen(tempSub.equation)-2] = '=';
-                        char temp[10] = {0}, storedPid[100] = {0};
-                        sprintf(storedPid, "%d", getpid());
-                        strcat(storedPid, ": ");
-                        sprintf(temp, "%d", tempSub.sum);
-                        strcat(tempSub.equation, temp);
-                        strcat(tempSub.equation, "\n");
-                        strcat(storedPid, tempSub.equation);
-                        fputs(storedPid, outptr);
-                        exit(0);
-                    }
-                    else {
-                        printf("nope\n");
-                        exit(0);
-                    }
-                }
-                else if(childPid < 0)  // fork failed
-                {
-                    perror("Error while attempting fork.\n");
-                }
-
-                else  // Main (parent) process after fork succeeds
-                {
-                    printf("here");
-                    waitpid(childPid, &status, 0);
-                }
-
+    n = atoi(buffer);
+    int x;
+    int wstatus;
+    printf("PID of Parent is %d\n", getpid());
+    pid_t childPid, w;
+    for(x = 0; x < n; x++){
+        childPid = fork();
+        fgets(buffer, sizeof(buffer), inptr);
+        if(childPid == 0)  // fork succeeded
+            {
+            line++;
+            struct subset tempSub = seperateString(buffer);
+            if (getSubsetSum(tempSub.subset, tempSub.size, tempSub.sum, tempSub.equation) == true) {
+                tempSub.equation[strlen(tempSub.equation)-2] = '=';
+                char temp[10] = {0}, storedPid[1000] = {0};
+                sprintf(storedPid, "%d", getpid());
+                strcat(storedPid, ": ");
+                sprintf(temp, "%d", tempSub.sum);
+                strcat(tempSub.equation, temp);
+                strcat(tempSub.equation, "\n");
+                strcat(storedPid, tempSub.equation);
+                fputs(storedPid, outptr);
+                exit(0);
             }
-
-
+            else {
+                printf("nope\n");
+                exit(0);
+            }
+            }
+        else  // Main (parent) process after fork succeeds
+        {
         }
-        line++;
-        exit(0);
+        do {
+            w = waitpid(childPid, &wstatus, WUNTRACED | WCONTINUED);
+            if (w == -1) {
+                break;
+            }
+            if (WIFEXITED(wstatus)) {
+                printf("exited, status=%d\n", WEXITSTATUS(wstatus));
+            } else if (WIFSIGNALED(wstatus)) {
+                printf("killed by signal %d\n", WTERMSIG(wstatus));
+            } else if (WIFSTOPPED(wstatus)) {
+                printf("stopped by signal %d\n", WSTOPSIG(wstatus));
+            } else if (WIFCONTINUED(wstatus)) {
+                printf("continued\n");
+            }
+        } while (!WIFEXITED(wstatus) && !WIFSIGNALED(wstatus));
+        timer(1);
     }
+    
+
+
+
     fclose(inptr);
     fclose(outptr);
+    exit(0);
 
 
 }
