@@ -198,7 +198,7 @@ int main(int argc, char *argv[]){
         if(inputFile[inSize-2] == 'a'){
             if(inputFile[inSize-3] == 'd'){
                 if(inputFile[inSize-4] == '.'){
-                    printf("Valid File\n");                           //print that the file is valid (is .dat extension)
+                    printf("Valid Input File\n");                     //print that the file is valid (is .dat extension)
                 }else{perror("Input file not .dat"); exit(0);}
             }else{perror("Input file not .dat"); exit(0);}
         }else{perror("Input file not .dat"); exit(0); }
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]){
         if(outputFile[outSize-2] == 'a'){
             if(outputFile[outSize-3] == 'd'){
                 if(outputFile[outSize-4] == '.'){
-                    printf("Valid File\n");                           //print that the file is valid (is .dat extension)
+                    printf("Valid Output File\n");                    //print that the file is valid (is .dat extension)
                 }else{perror("Output file not .dat"); exit(0);}
             }else{perror("Output file not .dat"); exit(0);}
         }else{perror("Output file not .dat"); exit(0); }
