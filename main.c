@@ -167,7 +167,13 @@ int main(int argc, char *argv[]){
     while ((opt = getopt(argc, argv,"hi:o:t:")) != -1) {                                                //GET OPT WOOOOO
         switch (opt) {                                          //start a switch statement for the commandline arguments
             case 'h' :                                                                              //print help message
-                printf("Haha, you want a help message you are cool.");
+                printf("Welcome to Log Parse!\n");
+                printf("Invocation: ./logParse [-h] [-i inputFile] [-o outputFile] [-t timer]\n");
+                printf("h : Display a help message to the user and exit \n");
+                printf("i : Use the given file name as the input file\n");
+                printf("o : Use the given file name as the output file\n");
+                printf("t : Limit the program to n amount of seconds for execution\n");
+                exit(0);
                 break;
             case 'i' :                                                                             //set input file name
                 strcpy(inputFile, "");
@@ -230,7 +236,6 @@ int main(int argc, char *argv[]){
     n = atoi(buffer);                                                              //get the number of lines to evaluate
     int x;                                                                                              //for loop below
     int wstatus;                                                                                //hold status of process
-    printf("PID of Parent is %d\n", getpid());                                                    //print the parent PID
     pid_t childPid, w;
 
     for(x = 0; x < n; x++){                                                       //enter the loop that will run n times
@@ -268,7 +273,10 @@ int main(int argc, char *argv[]){
                     char temp[20];
                     sprintf(temp, "%d", getpid());                                                //store the process id
                     strcpy(error, temp);
-                    strcat(error, ": No subset found\n");                                //concatenate the error message
+                    strcat(error, ": No subset of numbers summed to ");                  //concatenate the error message
+                    sprintf(temp, "%d", tempSub.sum);
+                    strcat(error, temp);
+                    strcat(error, "\n");
                     fputs(error, outptr);                                       //write the error message to output file
                 }
                 exit(0);                                                                               //end the process
